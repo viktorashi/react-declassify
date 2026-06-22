@@ -1,0 +1,106 @@
+version: "1"
+
+params:
+  autoAiReview:
+    name: "Auto AI Review"
+    description: "Whether to use AI to review the transformed React components (requires LLM_API_KEY environment variable)"
+    type: boolean
+    default: false
+
+nodes:
+  - id: apply-transforms
+    name: Apply AST Transformations
+    type: automatic
+    steps:
+      - name: "Transform React class components to function components"
+        exec: "npx -y @codemod/cli --plugin ./dist/index.js '**/*.tsx' '**/*.ts' '**/*.jsx' '**/*.js' --ignore-pattern 'node_modules/**' --ignore-pattern 'dist/**' --ignore-pattern 'build/**' --ignore-pattern 'cjs/**'"
+  - id: ai-review
+    name: "AI Review"
+    type: automatic
+    if: "params.autoAiReview == true"
+    depends_on:
+      - apply-transforms
+    steps:
+      - name: "AI Code Review"
+        ai:
+          model: "gpt-4o-mini"  
+          max_tokens: 8000
+          prompt: |
+            IMPORTANT: A codemod has ALREADY transformed React class components to function components in this repository.
+            The transformation is COMPLETE. Your job is NOT to transform - only to REVIEW and FIX issues.
+            
+            CRITICAL: You MUST provide verbose output explaining what you're doing at each step!
+            Output your progress as you work so users can see what's happening.
+            
+            Step 1: Find the transformed files (and SAY what you're doing)
+            - Use tools to search for files containing: "React.useState", "React.useEffect", "useRef", etc.
+            - Look for .tsx, .jsx, .ts, .js files anywhere in the project (not just src/)
+            - Check the git status to see which files were modified
+            
+            Step 2: Review common transformation issues (and SAY which files you're checking)
+            Read the transformed files and look for problems like:
+            - useEffect with missing dependency arrays
+            - State updates that should use functional form (prev => ...)
+            - Any leftover "this." references
+            - Missing cleanup functions in useEffect
+            
+            Step 3: Fix issues you find
+            Only modify files that have actual problems. Don't change files that are already correct.
+            
+            Step 4: ALWAYS output a clear summary
+            You MUST provide a detailed summary at the end including:
+            - Total files reviewed
+            - Number of files with issues found
+            - List of ACTUAL files you modified (use real file paths from this repository!)
+            - Specific changes made to each file
+            - If no issues found, explicitly state "No issues found - all transformations look good!"
+            
+            Output format (use REAL file paths, not these examples):
+            ```
+            📊 AI Review Summary
+            ==================
+            Files reviewed: [actual number]
+            Files with issues: [actual number]
+            Files modified: [actual number]
+            
+            Changes made:
+            1. [ACTUAL FILE PATH from this repo]
+               - [specific change made]
+               - [specific change made]
+            
+            2. [ACTUAL FILE PATH from this repo]
+               - [specific change made]
+            
+            OR if no issues:
+            "✅ No issues found - all transformations look good!"
+            ```
+            
+            Specifically, review and FIX these common issues:
+            
+            **Critical Fixes:**
+            - Fix missing or incorrect dependency arrays in useEffect hooks
+            - Fix stale closures and incorrect state references  
+            - Fix any remaining this.props, this.state, or this.context references
+            - Ensure all setState calls use the functional updater when depending on previous state
+            - Add missing cleanup functions in useEffect where needed
+            
+            **Code Quality:**
+            - Run the project's code formatter (prettier/eslint) with --fix if available
+            - Fix any linter errors introduced by the transformation
+            - Ensure proper TypeScript types are maintained/improved
+            - Optimize with useCallback/useMemo only where truly beneficial
+            
+            **Efficient Review Strategy:**
+            - First, run: git diff --name-only --diff-filter=M | head -20
+              This shows the first 20 modified files - review these first
+            - If that times out, run: grep -r "React.useState" --include="*.js" --include="*.jsx" --include="*.tsx" --include="*.ts" | head -10
+              This finds files with useState hooks
+            - Read those files and check for the issues listed above
+            - Focus on the most critical issues first (missing deps, stale closures)
+            - Limit yourself to reviewing ~10-20 files at a time to avoid timeouts
+            
+            **Validation:**
+            - Verify the code compiles without errors
+            - Check that the transformed code maintains the same behavior as the original
+            
+            ONLY make changes if you find actual issues. If the transformation is already correct, don't modify the files.
