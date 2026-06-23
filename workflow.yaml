@@ -50,7 +50,10 @@ nodes:
             - Total files reviewed
             - List of ACTUAL files you modified (use real file paths)
             - Specific changes made to each file (e.g., "Resolved TODO_this", "Added forwardRef")
-            
+
+            try `npm run build`-ing to validate.
+
+
             Output format:
             ```
             📊 AI Review Summary
