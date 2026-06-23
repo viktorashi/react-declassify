@@ -22,18 +22,19 @@ nodes:
       - apply-transforms
     steps:
       - name: "AI Code Review"
+        glob: "src/**/*.js"
         ai:
           max_tokens: 8000
           prompt: |
-            You are an expert React migration codemod.
-            Your job is to fix any remaining issues in this file after an automatic class-to-function component transform.
-            Look specifically for any `TODO_this` references or `react-declassify-disable` comments.
-            1. If `TODO_this.shouldComponentUpdate` is used, rewrite the component export to use `React.memo(ComponentName, (prevProps, nextProps) => { ... })`. Make sure to convert any `props` variables and maintain identical behavior. Return `true` if it shouldn't update, `false` if it should update. Wait, `shouldComponentUpdate` returns `true` to update. `React.memo` returns `true` to SKIP update (if props are equal). Keep this in mind!
-            2. If there are refs exposed via `TODO_this.something`, refactor the functional component to use `React.forwardRef` and expose those elements using `useImperativeHandle(ref, () => ({ get something() { return refName.current; } }))`.
-            3. Fix any eslint errors you might create (use implicit arrow returns where possible, no trailing commas missing).
+            You are an expert React migration codemod agent.
+            Your job is to fix the remaining issues in the React codebase after an automatic class-to-function component transform.
+            Please search for all .js files in the src/ directory (especially src/components/ and src/reducers/ and src/control/) that contain the string `TODO_this` or `react-declassify-disable`.
+            For each file you find, you must edit it to fix the issues:
+            1. If `TODO_this.shouldComponentUpdate` is used, remove it completely and rewrite the component export to use `React.memo(ComponentName, (prevProps, nextProps) => { ... })`. Make sure to convert any `props` variables and maintain identical behavior. WARNING: `shouldComponentUpdate` returns `true` to update. `React.memo` returns `true` to SKIP update. Invert the boolean logic!
+            2. For component refs (like dom_rotate, dom_down, etc.), if they are accessed dynamically via `TODO_this[\`dom_${key}\`].dom`, replace that access with `eval(\`dom_${key}\`).current` or create a local object mapping keys to refs and use that. Make sure `TODO_this` is completely removed.
+            3. Fix any eslint errors you might create:
+               - Ensure spaces before function parentheses (e.g., `function () {}` not `function(){}`).
+               - Ensure there are no missing trailing commas.
+               - If there are camelcase errors for variables like `dom_rotate`, either fix them to `domRotate` (and update all usages including string interpolation like `` \`dom_${key}\` ``) or add `/* eslint-disable camelcase */` at the top of the file to ignore them.
             
-            OUTPUT INSTRUCTIONS:
-            If you made changes, output the full updated file content wrapped in a single ```javascript code block.
-            If the file needs absolutely no changes, you MUST output the exact original file content wrapped in a ```javascript code block.
-            Do not provide any explanations or markdown other than the code block.
-
+            Edit the files directly using your available tools. Do not stop until all instances of `TODO_this` are removed from the src/ directory.
