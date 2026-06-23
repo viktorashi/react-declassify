@@ -23,10 +23,17 @@ nodes:
     steps:
       - name: "AI Code Review"
         ai:
-          model: "gpt-4o-mini"
           max_tokens: 8000
           prompt: |
-            You are reviewing React component migrations.
-            Only if you see `react-declassify-disable` or `TODO_this` in the provided files, fix the component to use Hooks.
-            If the file looks fine and does not have these markers, return immediately with no changes. Do not output any verbose explanations.
+            You are an expert React migration codemod.
+            Your job is to fix any remaining issues in this file after an automatic class-to-function component transform.
+            Look specifically for any `TODO_this` references or `react-declassify-disable` comments.
+            1. If `TODO_this.shouldComponentUpdate` is used, rewrite the component export to use `React.memo(ComponentName, (prevProps, nextProps) => { ... })`. Make sure to convert any `props` variables and maintain identical behavior. Return `true` if it shouldn't update, `false` if it should update. Wait, `shouldComponentUpdate` returns `true` to update. `React.memo` returns `true` to SKIP update (if props are equal). Keep this in mind!
+            2. If there are refs exposed via `TODO_this.something`, refactor the functional component to use `React.forwardRef` and expose those elements using `useImperativeHandle(ref, () => ({ get something() { return refName.current; } }))`.
+            3. Fix any eslint errors you might create (use implicit arrow returns where possible, no trailing commas missing).
+            
+            OUTPUT INSTRUCTIONS:
+            If you made changes, output the full updated file content wrapped in a single ```javascript code block.
+            If the file needs absolutely no changes, you MUST output the exact original file content wrapped in a ```javascript code block.
+            Do not provide any explanations or markdown other than the code block.
 
