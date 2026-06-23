@@ -13,7 +13,7 @@ nodes:
     type: automatic
     steps:
       - name: "Transform React class components to function components"
-        exec: "npx -y @codemod/cli --plugin ./dist/index.js '**/*.tsx' '**/*.ts' '**/*.jsx' '**/*.js' --ignore-pattern 'node_modules/**' --ignore-pattern 'dist/**' --ignore-pattern 'build/**' --ignore-pattern 'cjs/**'"
+        run: "npx -y @codemod/cli@3.3.0 --plugin ../../../react-declassify/cjs/dist/index.js src/"
   - id: ai-review
     name: "AI Review"
     type: automatic
