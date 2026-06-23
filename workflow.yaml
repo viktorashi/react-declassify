@@ -23,28 +23,28 @@ nodes:
     steps:
       - name: "AI Code Review"
         ai:
-          model: "gpt-4o-mini"  
+          model: "gpt-4o-mini"
           max_tokens: 8000
           prompt: |
             IMPORTANT: A codemod (`react-declassify`) has ALREADY attempted to transform React class components to function components in this repository.
             Most files are COMPLETE, but `react-declassify` has known limitations and leaves markers where it fails. Your job is to REVIEW, FIX, and FINISH the transformations.
-            
+
             CRITICAL: You MUST provide verbose output explaining what you're doing at each step!
             Output your progress as you work so users can see what's happening.
-            
+
             Step 1: Search for Hard Errors and Soft Errors
             - Search the project for `react-declassify-disable Cannot perform transformation`. This indicates a HARD ERROR where the tool gave up. You MUST manually convert this entire class to a function component with Hooks yourself!
             - Search the project for `TODO_this`. This indicates a SOFT ERROR where the tool didn't know how to bind or resolve `this`. Fix the scoping and state/prop references.
-            
+
             Step 2: Address react-declassify's Known Limitations
             - Class Refs: If the old class was receiving refs or being instantiated via `useRef`, the new functional component will break. You MUST wrap the component in `React.forwardRef` and use `useImperativeHandle` to expose the necessary methods/properties!
             - Stricter Render Types: If the component returns a bare string/number and TypeScript complains about `FC<Props>`, wrap the return statement in a fragment `<> ... </>`.
-            
+
             Step 3: Review common transformation issues
             - Fix missing or incorrect dependency arrays in useEffect hooks
             - Ensure all setState calls use the functional updater when depending on previous state
             - Add missing cleanup functions in useEffect where needed
-            
+
             Step 4: ALWAYS output a clear summary
             You MUST provide a detailed summary at the end including:
             - Total files reviewed
@@ -60,12 +60,12 @@ nodes:
             ==================
             Files reviewed: [actual number]
             Files modified: [actual number]
-            
+
             Changes made:
             1. [ACTUAL FILE PATH]
                - [specific change]
             ```
-            
+
             **Efficient Review Strategy:**
             - Run: grep -r "TODO_this" --include="*.js" --include="*.jsx" --include="*.tsx" --include="*.ts" .
             - Run: grep -r "react-declassify-disable" --include="*.js" --include="*.jsx" --include="*.tsx" --include="*.ts" .
